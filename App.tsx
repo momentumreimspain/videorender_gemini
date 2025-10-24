@@ -71,7 +71,7 @@ const App: React.FC = () => {
 
   const handleGenerateVideo = async () => {
     if (!imageFile) {
-      setError("Please upload an image first.");
+      setError("Por favor sube una imagen primero.");
       return;
     }
 
@@ -105,14 +105,14 @@ const App: React.FC = () => {
       }
     } catch (e: any) {
       console.error("Video generation failed:", e);
-      let errorMessage =
-        "An unexpected error occurred during video generation.";
+       let errorMessage =
+         "Ocurrió un error inesperado durante la generación del video.";
       if (e.message) {
         errorMessage = e.message;
       }
       if (errorMessage.includes("Requested entity was not found.")) {
         setApiKeySelected(false);
-        setError("API Key not found. Please select your API Key again.");
+        setError("Clave API no encontrada. Por favor selecciona tu Clave API nuevamente.");
       } else {
         setError(errorMessage);
       }
@@ -130,10 +130,10 @@ const App: React.FC = () => {
         setError(null);
       } catch (e) {
         console.error("Error opening API key selection:", e);
-        setError("Could not open the API key selection dialog.");
+        setError("No se pudo abrir el diálogo de selección de clave API.");
       }
     } else {
-      setError("API key management is not available in this environment.");
+      setError("La gestión de claves API no está disponible en este entorno.");
     }
   };
 
@@ -147,22 +147,22 @@ const App: React.FC = () => {
           <div className="xl:col-span-1 bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-700 p-6 overflow-y-auto">
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-cyan-300">
-                1. Upload Your Render
+                1. Sube tu Render
               </h2>
               <ImageUpload onImageUpload={handleImageUpload} />
 
               <h2 className="text-xl font-semibold text-cyan-300">
-                2. Describe the Animation
+                2. Describe la Animación
               </h2>
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="e.g., 'A person calmly prepares breakfast in the morning light.' or 'A family enjoys a sunny afternoon by the pool.'"
+                placeholder="ej., 'Una persona prepara tranquilamente el desayuno con la luz de la mañana.' o 'Una familia disfruta de una tarde soleada junto a la piscina.'"
                 className="w-full h-24 p-3 bg-gray-900/70 border border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 outline-none transition-all duration-300 placeholder-gray-500 text-sm"
               />
 
               <h2 className="text-xl font-semibold text-cyan-300">
-                3. Select Output Quality
+                3. Selecciona la Calidad
               </h2>
               <div className="flex space-x-2 rounded-lg bg-gray-900/70 p-1 border border-gray-600">
                 <button
@@ -174,7 +174,7 @@ const App: React.FC = () => {
                       : "text-gray-400 hover:bg-gray-700"
                   }`}
                 >
-                  720p <span className="text-xs text-cyan-200">(Fast)</span>
+                   720p <span className="text-xs text-cyan-200">(Rápido)</span>
                 </button>
                 <button
                   type="button"
@@ -185,12 +185,12 @@ const App: React.FC = () => {
                       : "text-gray-400 hover:bg-gray-700"
                   }`}
                 >
-                  1080p <span className="text-xs text-cyan-200">(HD)</span>
+                   1080p <span className="text-xs text-cyan-200">(Alta Definición)</span>
                 </button>
               </div>
 
               <h2 className="text-xl font-semibold text-cyan-300">
-                4. Add Background Music
+                4. Añade Música de Fondo
               </h2>
               <div className="grid grid-cols-1 gap-2 rounded-lg bg-gray-900/70 p-1 border border-gray-600">
                 {musicTracks.map((track) => (
@@ -215,7 +215,7 @@ const App: React.FC = () => {
                   disabled={isLoading || !imageFile}
                   className="w-full"
                 >
-                  {isLoading ? "Generating..." : "Animate Render"}
+                   {isLoading ? "Generando..." : "Animar Render"}
                 </Button>
               </div>
             </div>
@@ -223,9 +223,9 @@ const App: React.FC = () => {
 
           {/* Right Panel - Video Preview */}
           <div className="xl:col-span-2 bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-700 p-6 flex flex-col">
-            <h2 className="text-xl font-semibold text-cyan-300 mb-4">
-              Video Preview
-            </h2>
+             <h2 className="text-xl font-semibold text-cyan-300 mb-4">
+               Vista Previa del Video
+             </h2>
             <div className="flex-1 flex items-center justify-center bg-gray-900/70 rounded-lg border border-gray-700 min-h-[500px]">
               {isLoading && <Loader />}
               {!isLoading && error && <Alert message={error} />}
@@ -245,12 +245,12 @@ const App: React.FC = () => {
                       d="M15 10l4.55a2 2 0 01.45 2.42l-2.5 5A2 2 0 0115.5 19H6.88a2 2 0 01-1.79-1.11L3 12.5V5a2 2 0 012-2h4l2 4h4a2 2 0 012 2z"
                     />
                   </svg>
-                  <p className="mt-4 text-lg">
-                    Your animated video will appear here.
-                  </p>
-                  <p className="text-sm">
-                    Upload a render and describe the scene to start.
-                  </p>
+                   <p className="mt-4 text-lg">
+                     Tu video animado aparecerá aquí.
+                   </p>
+                   <p className="text-sm">
+                     Sube un render y describe la escena para comenzar.
+                   </p>
                 </div>
               )}
               {videoUrl && (
@@ -262,25 +262,25 @@ const App: React.FC = () => {
 
         {!apiKeySelected && (
           <div className="mt-6 p-4 bg-yellow-900/50 border border-yellow-700 rounded-lg text-center">
-            <p className="mb-2 text-yellow-200">
-              An API key is required for video generation. Please select your
-              key to proceed.
-              <a
-                href="https://ai.google.dev/gemini-api/docs/billing"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-yellow-100 ml-1"
-              >
-                Learn about billing
-              </a>
-              .
-            </p>
-            <Button
-              onClick={handleSelectApiKey}
-              className="bg-yellow-600 hover:bg-yellow-500 text-white"
-            >
-              Select API Key
-            </Button>
+             <p className="mb-2 text-yellow-200">
+               Se requiere una clave API para la generación de videos. Por favor selecciona tu
+               clave para continuar.
+               <a
+                 href="https://ai.google.dev/gemini-api/docs/billing"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 className="underline hover:text-yellow-100 ml-1"
+               >
+                 Aprende sobre facturación
+               </a>
+               .
+             </p>
+             <Button
+               onClick={handleSelectApiKey}
+               className="bg-yellow-600 hover:bg-yellow-500 text-white"
+             >
+               Seleccionar Clave API
+             </Button>
           </div>
         )}
       </main>

@@ -120,9 +120,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, musicUrl }) => {
                   clipRule="evenodd"
                 />
               </svg>
-              <p className="text-white font-semibold mt-2 text-xl">
-                Click to Play
-              </p>
+               <p className="text-white font-semibold mt-2 text-xl">
+                 Haz Clic para Reproducir
+               </p>
             </div>
           </div>
         )}
@@ -133,7 +133,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, musicUrl }) => {
           loop
           className="w-full h-full object-contain rounded-lg shadow-lg bg-black"
         >
-          Your browser does not support the video tag.
+          Tu navegador no soporta la etiqueta de video.
         </video>
       </div>
 
@@ -152,9 +152,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, musicUrl }) => {
               clipRule="evenodd"
             />
           </svg>
-          <span className="text-xs text-gray-400 flex-shrink-0 w-24">
-            Ambient:
-          </span>
+           <span className="text-xs text-gray-400 flex-shrink-0 w-24">
+             Ambiente:
+           </span>
           <input
             type="range"
             min="0"
@@ -163,7 +163,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, musicUrl }) => {
             value={videoVolume}
             onChange={(e) => setVideoVolume(parseFloat(e.target.value))}
             className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-            aria-label="Ambient sound volume"
+             aria-label="Volumen del sonido ambiente"
           />
         </div>
         {/* Music Volume Control */}
@@ -179,9 +179,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, musicUrl }) => {
               >
                 <path d="M5.5 16.5A1.5 1.5 0 114 15a1.5 1.5 0 011.5 1.5zM15.5 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM5 4.466V13.5h8V6.612L7.22 4.466a2 2 0 00-2.22 0z" />
               </svg>
-              <span className="text-xs text-gray-400 flex-shrink-0 w-24">
-                Music:
-              </span>
+               <span className="text-xs text-gray-400 flex-shrink-0 w-24">
+                 Música:
+               </span>
               <input
                 type="range"
                 min="0"
@@ -190,7 +190,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, musicUrl }) => {
                 value={musicVolume}
                 onChange={(e) => setMusicVolume(parseFloat(e.target.value))}
                 className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                aria-label="Music volume"
+                 aria-label="Volumen de la música"
               />
             </div>
           </>

@@ -27,7 +27,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageUpload }) => {
   return (
     <div
       {...getRootProps()}
-      className={`w-full h-64 border-2 border-dashed rounded-lg flex items-center justify-center text-center p-4 cursor-pointer transition-all duration-300
+      className={`w-full h-36 border-2 border-dashed rounded-lg flex items-center justify-center text-center p-4 cursor-pointer transition-all duration-300
         ${isDragActive ? 'border-cyan-400 bg-gray-700/50' : 'border-gray-600 hover:border-cyan-500 bg-gray-900/50'}`}
     >
       <input {...getInputProps()} />
@@ -39,9 +39,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageUpload }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
           </svg>
           <p className="mt-2">
-            {isDragActive ? 'Drop the render here...' : 'Drag & drop render here, or click to select'}
+            {isDragActive ? 'Suelta el render aquí...' : 'Arrastra y suelta el render aquí, o haz clic para seleccionar'}
           </p>
-          <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 10MB</p>
+          <p className="text-xs text-gray-500 mt-1">PNG, JPG hasta 10MB</p>
         </div>
       )}
     </div>
