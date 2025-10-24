@@ -1,13 +1,34 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ThemeToggle } from "./ThemeToggle";
 import { Theme } from "../hooks/useTheme";
+import { User } from "firebase/auth";
 
 interface HeaderProps {
   theme: Theme;
   onThemeChange: (theme: Theme) => void;
+  user: User | null;
+  onSignIn: () => void;
+  onSignOut: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ theme, onThemeChange }) => {
+export const Header: React.FC<HeaderProps> = ({ theme, onThemeChange, user, onSignIn, onSignOut }) => {
+  const [imageError, setImageError] = useState(false);
+
+  // Reset image error when user changes
+  useEffect(() => {
+    setImageError(false);
+  }, [user?.uid]);
+
+  // Get initials from user name
+  const getInitials = (name: string | null) => {
+    if (!name) return 'U';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
   return (
     <header className="border-b bg-white dark:bg-slate-800 backdrop-blur supports-[backdrop-filter]:bg-card/80 sticky top-0 z-40 shadow-sm">
       <div className="container mx-auto px-6 py-3">
@@ -29,8 +50,45 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeChange }) => {
             </div>
           </div>
 
-          {/* Theme Toggle */}
-          <ThemeToggle theme={theme} onThemeChange={onThemeChange} />
+          {/* Right side: Theme Toggle + User */}
+          <div className="flex items-center space-x-3">
+            <ThemeToggle theme={theme} onThemeChange={onThemeChange} />
+
+            {user ? (
+              <div className="flex items-center space-x-2">
+                {user.photoURL && !imageError ? (
+                  <img
+                    src={user.photoURL}
+                    alt={user.displayName || 'User'}
+                    className="w-8 h-8 rounded-full border-2 border-border object-cover"
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full border-2 border-border bg-primary/10 flex items-center justify-center">
+                    <span className="text-xs font-semibold text-primary">
+                      {getInitials(user.displayName)}
+                    </span>
+                  </div>
+                )}
+                <div className="hidden md:block">
+                  <p className="text-sm font-medium text-foreground">{user.displayName}</p>
+                </div>
+                <button
+                  onClick={onSignOut}
+                  className="text-xs px-3 py-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                >
+                  Salir
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={onSignIn}
+                className="text-sm px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors font-medium shadow-sm"
+              >
+                Iniciar sesión
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </header>

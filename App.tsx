@@ -29,7 +29,11 @@ import { GallerySidebar } from "./components/GallerySidebar";
 import { QuickActions } from "./components/QuickActions";
 import { ContextPanel } from "./components/ContextPanel";
 import { blobToBase64 } from "./utils/blob";
-import type { VeoResponse, VideoResolution, MusicTrack } from "./types";
+import { VideoConfigPreview } from "./components/VideoConfigPreview";
+import { CameraPresets } from "./components/CameraPresets";
+import { useToast } from "./components/Toast";
+import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
+import type { VeoResponse, VideoResolution, MusicTrack, CameraMovement, MovementSpeed, Duration } from "./types";
 
 declare global {
   interface AIStudio {
@@ -52,6 +56,9 @@ const App: React.FC = () => {
   // Theme
   const { theme, changeTheme } = useTheme();
 
+  // Toast notifications
+  const { showToast, ToastContainer } = useToast();
+
   // Auth
   const [user, setUser] = useState<User | null>(null);
 
@@ -65,9 +72,15 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [apiKeySelected, setApiKeySelected] = useState<boolean>(false);
 
+  // Camera config
+  const [cameraMovement, setCameraMovement] = useState<CameraMovement>("static");
+  const [movementSpeed, setMovementSpeed] = useState<MovementSpeed>("medium");
+  const [duration, setDuration] = useState<Duration>("6s");
+  const [intensity, setIntensity] = useState<number>(5);
+
   // Gallery & Context
   const [projects, setProjects] = useState<VideoProject[]>([]);
-  const [showGallery, setShowGallery] = useState(false);
+  const [showGallery, setShowGallery] = useState(true);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [description, setDescription] = useState("");
@@ -86,6 +99,34 @@ const App: React.FC = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + Enter: Generate video
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && imageFile && !isLoading) {
+        e.preventDefault();
+        handleGenerateVideo();
+        showToast('Generando video... (⌘+Enter)', 'info');
+      }
+
+      // Cmd/Ctrl + S: Save project
+      if ((e.metaKey || e.ctrlKey) && e.key === 's' && videoUrl && user) {
+        e.preventDefault();
+        handleSaveContext();
+      }
+
+      // Cmd/Ctrl + D: Download video
+      if ((e.metaKey || e.ctrlKey) && e.key === 'd' && videoUrl) {
+        e.preventDefault();
+        handleDownload();
+        showToast('Descargando video... (⌘+D)', 'info');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [imageFile, isLoading, videoUrl, user]);
 
   const checkApiKey = useCallback(async () => {
     if (window.aistudio) {
@@ -138,14 +179,16 @@ const App: React.FC = () => {
     setError(null);
   };
 
+  const handlePresetSelect = (preset: { movement: CameraMovement; speed: MovementSpeed; duration: Duration; intensity: number }) => {
+    setCameraMovement(preset.movement);
+    setMovementSpeed(preset.speed);
+    setDuration(preset.duration);
+    setIntensity(preset.intensity);
+  };
+
   const handleGenerateVideo = async () => {
     if (!imageFile) {
       setError("Sube una imagen primero");
-      return;
-    }
-
-    if (!prompt.trim()) {
-      setError("Describe la animación");
       return;
     }
 
@@ -162,24 +205,51 @@ const App: React.FC = () => {
       const base64Image = await blobToBase64(imageFile);
       const mimeType = imageFile.type;
 
+      // Build enhanced prompt with camera parameters
+      const movementDescriptions: Record<CameraMovement, string> = {
+        'static': 'static camera, no movement',
+        'pan-left': 'smooth camera pan to the left',
+        'pan-right': 'smooth camera pan to the right',
+        'tilt-up': 'camera tilts upward',
+        'tilt-down': 'camera tilts downward',
+        'zoom-in': 'camera zooms in slowly',
+        'zoom-out': 'camera zooms out slowly',
+        'dolly-in': 'camera dollies in towards subject',
+        'dolly-out': 'camera dollies out from subject',
+        'orbit': 'camera orbits around the subject',
+        'crane': 'crane shot moving elegantly'
+      };
+
+      const speedDescriptions: Record<MovementSpeed, string> = {
+        'slow': 'very slow and cinematic',
+        'medium': 'at a moderate pace',
+        'fast': 'quickly and dynamically'
+      };
+
+      const enhancedPrompt = `${movementDescriptions[cameraMovement]} ${speedDescriptions[movementSpeed]}, ${duration} duration${prompt ? `. ${prompt}` : ''}. Professional cinematography, smooth motion, high quality rendering.`;
+
       const result: VeoResponse = await generateVideoFromImage(
         base64Image,
         mimeType,
-        prompt,
+        enhancedPrompt,
         resolution
       );
 
       if (result.videoUrl) {
         setVideoUrl(result.videoUrl);
+        showToast('Video generado exitosamente', 'success');
       } else if (result.error) {
         setError(result.error);
+        showToast(result.error, 'error');
         if (result.error.includes("Requested entity was not found.")) {
           setApiKeySelected(false);
         }
       }
     } catch (e: any) {
       console.error("Video generation failed:", e);
-      setError(e.message || "Error generando el video");
+      const errorMsg = e.message || "Error generando el video";
+      setError(errorMsg);
+      showToast(errorMsg, 'error');
       if (e.message?.includes("Requested entity was not found.")) {
         setApiKeySelected(false);
       }
@@ -204,9 +274,19 @@ const App: React.FC = () => {
   };
 
   const handleSaveContext = async () => {
-    if (!user || !videoUrl) return;
+    if (!user) {
+      setError("Debes iniciar sesión para guardar proyectos");
+      return;
+    }
+
+    if (!videoUrl) {
+      setError("Primero genera un video para guardarlo");
+      return;
+    }
 
     setIsSaving(true);
+    setError(null);
+
     try {
       if (currentProjectId) {
         // Update existing project
@@ -236,6 +316,11 @@ const App: React.FC = () => {
           tags,
           description,
           createdAt: Timestamp.now(),
+          // Add camera config (these might not be in VideoProject type yet, but we'll add them)
+          cameraMovement: cameraMovement,
+          movementSpeed: movementSpeed,
+          duration: duration,
+          intensity: intensity,
         };
 
         const projectId = await saveVideoProject(project);
@@ -243,10 +328,13 @@ const App: React.FC = () => {
       }
 
       await loadProjects();
-      alert('Proyecto guardado exitosamente');
-    } catch (error) {
+      showToast('Proyecto guardado exitosamente', 'success');
+
+    } catch (error: any) {
       console.error("Error saving project:", error);
-      setError("Error al guardar el proyecto");
+      const errorMsg = error.message || "Error al guardar el proyecto. Por favor, intenta de nuevo.";
+      setError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setIsSaving(false);
     }
@@ -274,7 +362,15 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900 text-foreground">
-      <Header theme={theme} onThemeChange={changeTheme} />
+      <ToastContainer />
+
+      <Header
+        theme={theme}
+        onThemeChange={changeTheme}
+        user={user}
+        onSignIn={handleSignIn}
+        onSignOut={handleSignOut}
+      />
 
       <GallerySidebar
         projects={projects}
@@ -292,45 +388,101 @@ const App: React.FC = () => {
             <div className="col-span-12 lg:col-span-4 bg-white dark:bg-slate-800">
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">Inputs</CardTitle>
-                  {!user && (
-                    <Button onClick={handleSignIn} size="sm">
-                      Iniciar sesión
-                    </Button>
-                  )}
-                  {user && (
-                    <Button onClick={handleSignOut} variant="ghost" size="sm">
-                      Salir
-                    </Button>
-                  )}
-                  </div>
+                  <CardTitle className="text-base">Inputs</CardTitle>
                 </CardHeader>
 
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-3">
                   {/* Image Upload */}
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Label>Imagen</Label>
                     <ImageUpload onImageUpload={handleImageUpload} />
                   </div>
 
+                  {/* Camera Presets */}
+                  <CameraPresets onSelectPreset={handlePresetSelect} />
+
                   {/* Prompt */}
-                  <div className="space-y-2">
-                    <Label>Descripción de la animación</Label>
+                  <div className="space-y-1.5">
+                    <Label>Descripción adicional (opcional)</Label>
                     <Textarea
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
-                      placeholder="Describe el movimiento de cámara..."
-                      className="resize-none"
+                      placeholder="Detalles adicionales de la escena..."
+                      className="resize-none h-12"
                     />
                   </div>
 
+                  {/* Camera Movement */}
+                  <div className="space-y-1.5">
+                    <Label>Movimiento de Cámara</Label>
+                    <Select
+                      value={cameraMovement}
+                      onChange={(e) => setCameraMovement(e.target.value as CameraMovement)}
+                    >
+                      <option value="static">Estático</option>
+                      <option value="pan-left">Paneo Izquierda</option>
+                      <option value="pan-right">Paneo Derecha</option>
+                      <option value="tilt-up">Inclinación Arriba</option>
+                      <option value="tilt-down">Inclinación Abajo</option>
+                      <option value="zoom-in">Zoom In</option>
+                      <option value="zoom-out">Zoom Out</option>
+                      <option value="dolly-in">Dolly In</option>
+                      <option value="dolly-out">Dolly Out</option>
+                      <option value="orbit">Órbita</option>
+                      <option value="crane">Grúa</option>
+                    </Select>
+                  </div>
+
+                  {/* Speed, Duration, Intensity Grid */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* Speed */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Velocidad</Label>
+                      <Select
+                        value={movementSpeed}
+                        onChange={(e) => setMovementSpeed(e.target.value as MovementSpeed)}
+                        className="text-xs"
+                      >
+                        <option value="slow">Lento</option>
+                        <option value="medium">Medio</option>
+                        <option value="fast">Rápido</option>
+                      </Select>
+                    </div>
+
+                    {/* Duration */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Duración</Label>
+                      <Select
+                        value={duration}
+                        onChange={(e) => setDuration(e.target.value as Duration)}
+                        className="text-xs"
+                      >
+                        <option value="4s">4s</option>
+                        <option value="6s">6s</option>
+                        <option value="8s">8s</option>
+                      </Select>
+                    </div>
+
+                    {/* Intensity */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Intensidad</Label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={intensity}
+                        onChange={(e) => setIntensity(Number(e.target.value))}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      />
+                    </div>
+                  </div>
+
                   {/* Settings Grid (2 columns) */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     {/* Resolution */}
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <Label>Calidad</Label>
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         <Button
                           onClick={() => setResolution("720p")}
                           variant={resolution === "720p" ? "default" : "outline"}
@@ -351,7 +503,7 @@ const App: React.FC = () => {
                     </div>
 
                     {/* Music */}
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <Label>Música</Label>
                       <Select
                         value={selectedMusic.name}
@@ -372,7 +524,7 @@ const App: React.FC = () => {
                   {/* Generate Button */}
                   <Button
                     onClick={handleGenerateVideo}
-                    disabled={isLoading || !imageFile || !prompt.trim()}
+                    disabled={isLoading || !imageFile}
                     className="w-full"
                   >
                     {isLoading ? "Generando..." : "Generar Video"}
@@ -436,6 +588,17 @@ const App: React.FC = () => {
                   </CardContent>
                 </Card>
 
+                {/* Video Configuration Preview */}
+                <VideoConfigPreview
+                  movement={cameraMovement}
+                  speed={movementSpeed}
+                  duration={duration}
+                  intensity={intensity}
+                  resolution={resolution}
+                  musicTrack={selectedMusic.name}
+                  prompt={prompt}
+                />
+
                 {/* Quick Actions */}
                 {videoUrl && (
                   <QuickActions
@@ -464,6 +627,8 @@ const App: React.FC = () => {
           </div>
         </div>
       </main>
+
+      <KeyboardShortcutsHelp />
     </div>
   );
 };

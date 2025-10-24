@@ -15,7 +15,7 @@ export const Card: React.FC<CardProps> = ({ children, className = '' }) => {
 
 export const CardHeader: React.FC<CardProps> = ({ children, className = '' }) => {
   return (
-    <div className={`flex flex-col space-y-1.5 p-6 ${className}`}>
+    <div className={`flex flex-col space-y-1.5 p-4 pb-3 ${className}`}>
       {children}
     </div>
   );
@@ -31,7 +31,7 @@ export const CardTitle: React.FC<CardProps> = ({ children, className = '' }) => 
 
 export const CardContent: React.FC<CardProps> = ({ children, className = '' }) => {
   return (
-    <div className={`p-6 pt-0 ${className}`}>
+    <div className={`p-4 pt-0 ${className}`}>
       {children}
     </div>
   );
