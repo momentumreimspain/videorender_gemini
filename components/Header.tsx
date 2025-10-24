@@ -17,7 +17,7 @@ export const Header: React.FC = () => {
                 </svg>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">Momentum AI</h1>
+                <h1 className="text-xl font-bold text-white">Momentum AI RE</h1>
                 <p className="text-xs text-gray-400">Generador de Videos desde Renders AI</p>
               </div>
             </div>
