@@ -18,7 +18,7 @@ export const Header: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-white">Momentum AI</h1>
-                <p className="text-xs text-gray-400">Generador de Videos desde Renders</p>
+                <p className="text-xs text-gray-400">Generador de Videos desde Renders AI</p>
               </div>
             </div>
           </div>
