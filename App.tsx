@@ -105,14 +105,16 @@ const App: React.FC = () => {
       }
     } catch (e: any) {
       console.error("Video generation failed:", e);
-       let errorMessage =
-         "Ocurrió un error inesperado durante la generación del video.";
+      let errorMessage =
+        "Ocurrió un error inesperado durante la generación del video.";
       if (e.message) {
         errorMessage = e.message;
       }
       if (errorMessage.includes("Requested entity was not found.")) {
         setApiKeySelected(false);
-        setError("Clave API no encontrada. Por favor selecciona tu Clave API nuevamente.");
+        setError(
+          "Clave API no encontrada. Por favor selecciona tu Clave API nuevamente."
+        );
       } else {
         setError(errorMessage);
       }
@@ -174,7 +176,7 @@ const App: React.FC = () => {
                       : "text-gray-400 hover:bg-gray-700"
                   }`}
                 >
-                   720p <span className="text-xs text-cyan-200">(Rápido)</span>
+                  720p <span className="text-xs text-cyan-200">(Rápido)</span>
                 </button>
                 <button
                   type="button"
@@ -185,7 +187,10 @@ const App: React.FC = () => {
                       : "text-gray-400 hover:bg-gray-700"
                   }`}
                 >
-                   1080p <span className="text-xs text-cyan-200">(Alta Definición)</span>
+                  1080p{" "}
+                  <span className="text-xs text-cyan-200">
+                    (Alta Definición)
+                  </span>
                 </button>
               </div>
 
@@ -215,7 +220,7 @@ const App: React.FC = () => {
                   disabled={isLoading || !imageFile}
                   className="w-full"
                 >
-                   {isLoading ? "Generando..." : "Animar Render"}
+                  {isLoading ? "Generando..." : "Animar Render"}
                 </Button>
               </div>
             </div>
@@ -223,9 +228,9 @@ const App: React.FC = () => {
 
           {/* Right Panel - Video Preview */}
           <div className="xl:col-span-2 bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-700 p-6 flex flex-col">
-             <h2 className="text-xl font-semibold text-cyan-300 mb-4">
-               Vista Previa del Video
-             </h2>
+            <h2 className="text-xl font-semibold text-cyan-300 mb-4">
+              Vista Previa del Video
+            </h2>
             <div className="flex-1 flex items-center justify-center bg-gray-900/70 rounded-lg border border-gray-700 min-h-[500px]">
               {isLoading && <Loader />}
               {!isLoading && error && <Alert message={error} />}
@@ -245,12 +250,12 @@ const App: React.FC = () => {
                       d="M15 10l4.55a2 2 0 01.45 2.42l-2.5 5A2 2 0 0115.5 19H6.88a2 2 0 01-1.79-1.11L3 12.5V5a2 2 0 012-2h4l2 4h4a2 2 0 012 2z"
                     />
                   </svg>
-                   <p className="mt-4 text-lg">
-                     Tu video animado aparecerá aquí.
-                   </p>
-                   <p className="text-sm">
-                     Sube un render y describe la escena para comenzar.
-                   </p>
+                  <p className="mt-4 text-lg">
+                    Tu video animado aparecerá aquí.
+                  </p>
+                  <p className="text-sm">
+                    Sube un render y describe la escena para comenzar.
+                  </p>
                 </div>
               )}
               {videoUrl && (
@@ -262,25 +267,25 @@ const App: React.FC = () => {
 
         {!apiKeySelected && (
           <div className="mt-6 p-4 bg-yellow-900/50 border border-yellow-700 rounded-lg text-center">
-             <p className="mb-2 text-yellow-200">
-               Se requiere una clave API para la generación de videos. Por favor selecciona tu
-               clave para continuar.
-               <a
-                 href="https://ai.google.dev/gemini-api/docs/billing"
-                 target="_blank"
-                 rel="noopener noreferrer"
-                 className="underline hover:text-yellow-100 ml-1"
-               >
-                 Aprende sobre facturación
-               </a>
-               .
-             </p>
-             <Button
-               onClick={handleSelectApiKey}
-               className="bg-yellow-600 hover:bg-yellow-500 text-white"
-             >
-               Seleccionar Clave API
-             </Button>
+            <p className="mb-2 text-yellow-200">
+              Se requiere una clave API para la generación de videos. Por favor
+              selecciona tu clave para continuar.
+              <a
+                href="https://ai.google.dev/gemini-api/docs/billing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-yellow-100 ml-1"
+              >
+                Aprende sobre facturación
+              </a>
+              .
+            </p>
+            <Button
+              onClick={handleSelectApiKey}
+              className="bg-yellow-600 hover:bg-yellow-500 text-white"
+            >
+              Seleccionar Clave API
+            </Button>
           </div>
         )}
       </main>

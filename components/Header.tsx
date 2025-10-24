@@ -45,9 +45,9 @@ export const Header: React.FC = () => {
               </a>
             </nav> */}
             <div className="h-6 w-px bg-gray-600"></div>
-              <button className="text-sm bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg transition-colors">
-                Comenzar
-              </button>
+            <button className="text-sm bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg transition-colors">
+              Comenzar
+            </button>
           </div>
 
           <div className="md:hidden">
