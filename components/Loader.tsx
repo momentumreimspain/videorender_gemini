@@ -25,10 +25,10 @@ export const Loader: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center text-center text-gray-300 p-4">
-      <div className="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p className="text-lg font-semibold text-white">Generating Your Video</p>
-      <p className="mt-2 text-gray-400 transition-opacity duration-500">
+    <div className="flex flex-col items-center justify-center text-center p-4">
+      <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p className="text-lg font-semibold text-foreground">Generating Your Video</p>
+      <p className="mt-2 text-muted-foreground transition-opacity duration-500">
         {loadingMessages[messageIndex]}
       </p>
     </div>

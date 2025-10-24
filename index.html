@@ -1,12 +1,48 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Persuadis LIFE - Render Animator</title>
+    <title>Momentum AI - Render Animator</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              border: 'hsl(var(--border))',
+              input: 'hsl(var(--input))',
+              ring: 'hsl(var(--ring))',
+              background: 'hsl(var(--background))',
+              foreground: 'hsl(var(--foreground))',
+              primary: {
+                DEFAULT: 'hsl(var(--primary))',
+                foreground: 'hsl(var(--primary-foreground))',
+              },
+              secondary: {
+                DEFAULT: 'hsl(var(--secondary))',
+                foreground: 'hsl(var(--secondary-foreground))',
+              },
+              muted: {
+                DEFAULT: 'hsl(var(--muted))',
+                foreground: 'hsl(var(--muted-foreground))',
+              },
+              accent: {
+                DEFAULT: 'hsl(var(--accent))',
+                foreground: 'hsl(var(--accent-foreground))',
+              },
+            },
+            borderRadius: {
+              lg: 'var(--radius)',
+              md: 'calc(var(--radius) - 2px)',
+              sm: 'calc(var(--radius) - 4px)',
+            },
+          },
+        },
+      }
+    </script>
   <script type="importmap">
 {
   "imports": {
@@ -19,8 +55,77 @@
 }
 </script>
 <link rel="stylesheet" href="/index.css">
+<style>
+  @layer base {
+    :root {
+      --background: 220 13% 98%;
+      --foreground: 222 47% 11%;
+      --muted: 220 13% 95%;
+      --muted-foreground: 220 9% 46%;
+      --card: 0 0% 100%;
+      --card-foreground: 222 47% 11%;
+      --primary: 173 80% 40%;
+      --primary-foreground: 0 0% 100%;
+      --secondary: 220 13% 95%;
+      --secondary-foreground: 222 47% 11%;
+      --accent: 173 80% 40%;
+      --accent-foreground: 0 0% 100%;
+      --border: 220 13% 91%;
+      --input: 220 13% 91%;
+      --ring: 173 80% 40%;
+      --radius: 0.5rem;
+    }
+
+    .dark {
+      --background: 222 47% 11%;
+      --foreground: 210 40% 98%;
+      --muted: 217 33% 17%;
+      --muted-foreground: 215 20% 65%;
+      --card: 222 47% 11%;
+      --card-foreground: 210 40% 98%;
+      --primary: 173 80% 40%;
+      --primary-foreground: 0 0% 100%;
+      --secondary: 217 33% 17%;
+      --secondary-foreground: 210 40% 98%;
+      --accent: 173 80% 40%;
+      --accent-foreground: 0 0% 100%;
+      --border: 217 33% 17%;
+      --input: 217 33% 17%;
+      --ring: 173 80% 40%;
+    }
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+</style>
 </head>
-  <body class="bg-gray-900 text-white">
+  <body class="antialiased">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
