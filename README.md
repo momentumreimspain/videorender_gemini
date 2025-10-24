@@ -19,3 +19,4 @@ View your app in AI Studio: https://ai.studio/apps/drive/1bi_c8aBqJRxbb3udpq4N0C
 3. Run the app:
    `npm run dev`
 # videorender_gemini
+# videorender_gemini
