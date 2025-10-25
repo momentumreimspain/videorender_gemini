@@ -33,7 +33,48 @@ After adding the environment variables, trigger a new deployment:
 - Click on the three dots next to the latest deployment
 - Select "Redeploy"
 
+### 4. Configure Firebase Rules
+
+**IMPORTANT**: You MUST configure Firebase rules or the app won't work!
+
+#### Apply Firestore Rules
+
+1. Go to [Firebase Console](https://console.firebase.google.com)
+2. Select your project
+3. Go to **Firestore Database** → **Rules** tab
+4. Copy the content from `firestore.rules` file
+5. Click **Publish**
+
+Or use Firebase CLI:
+```bash
+firebase deploy --only firestore:rules
+```
+
+#### Apply Storage Rules
+
+1. Go to [Firebase Console](https://console.firebase.google.com)
+2. Select your project
+3. Go to **Storage** → **Rules** tab
+4. Copy the content from `storage.rules` file
+5. Click **Publish**
+
+Or use Firebase CLI:
+```bash
+firebase deploy --only storage
+```
+
 ### Common Issues
+
+#### Missing or insufficient permissions
+This happens when Firebase rules are not configured.
+
+**Solution**: Apply the rules from `firestore.rules` and `storage.rules` files (see above)
+
+#### CORS Issues in Storage
+Make sure you've applied the `storage.rules` file correctly. The rules allow:
+- ✅ Anyone can READ files (for viewing in gallery)
+- ✅ Only authenticated users can WRITE to their own folders
+- ✅ Only owners can DELETE their files
 
 #### 404 on index.css
 ✅ **Fixed**: Removed the unused index.css link from index.html
@@ -46,35 +87,6 @@ This happens when environment variables are not set in Vercel.
 2. Navigate to Environment Variables
 3. Add all VITE_FIREBASE_* variables
 4. Redeploy the project
-
-#### CORS Issues
-Make sure your Firebase Storage rules allow reading files:
-```
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-  }
-}
-```
-
-### Firestore Rules
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /projects/{projectId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
-    }
-  }
-}
-```
 
 ## Build Command
 Vercel should automatically detect Vite and use:
