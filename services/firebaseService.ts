@@ -38,7 +38,13 @@ export interface VideoProject {
   tags: string[];
   description?: string;
   createdAt: Timestamp;
+  updatedAt?: Timestamp;
   thumbnailUrl?: string;
+  // Camera configuration
+  cameraMovement?: string;
+  movementSpeed?: string;
+  duration?: string;
+  intensity?: number;
 }
 
 // Authentication

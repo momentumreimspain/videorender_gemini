@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { VideoProject } from "../services/firebaseService";
 
 interface GallerySidebarProps {
@@ -7,6 +7,7 @@ interface GallerySidebarProps {
   onClose: () => void;
   onToggle: () => void;
   onSelectProject: (project: VideoProject) => void;
+  onOpenModal: (project: VideoProject) => void;
   isLoading: boolean;
 }
 
@@ -16,8 +17,26 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
   onClose,
   onToggle,
   onSelectProject,
+  onOpenModal,
   isLoading
 }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterTag, setFilterTag] = useState<string | null>(null);
+
+  // Get all unique tags from projects
+  const allTags = Array.from(new Set(projects.flatMap(p => p.tags || [])));
+
+  // Filter projects based on search and tag
+  const filteredProjects = projects.filter(project => {
+    const matchesSearch = !searchTerm ||
+      project.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.prompt?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchesTag = !filterTag || project.tags?.includes(filterTag);
+
+    return matchesSearch && matchesTag;
+  });
   // Keyboard shortcut: Cmd+Shift+G
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -72,11 +91,42 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 bg-muted/20">
+        {/* Search and Filter */}
+        <div className="mb-4 space-y-2">
+          <input
+            type="text"
+            placeholder="Buscar proyectos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm text-foreground placeholder-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          />
+
+          {allTags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              <button
+                onClick={() => setFilterTag(null)}
+                className={`px-2 py-1 text-xs rounded ${!filterTag ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
+              >
+                Todos
+              </button>
+              {allTags.map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => setFilterTag(tag)}
+                  className={`px-2 py-1 text-xs rounded ${filterTag === tag ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {isLoading ? (
           <div className="flex items-center justify-center h-32">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
-        ) : projects.length === 0 ? (
+        ) : filteredProjects.length === 0 ? (
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
@@ -86,66 +136,87 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {projects.map((project) => (
-              <button
+          <div className="grid grid-cols-1 gap-3">
+            {filteredProjects.map((project) => (
+              <div
                 key={project.id}
-                onClick={() => {
-                  onSelectProject(project);
-                  onClose();
-                }}
-                className="group relative bg-muted/30 rounded-lg overflow-hidden border border-border hover:border-primary hover:shadow-md transition-all duration-200 hover:scale-[1.02]"
+                className="group relative bg-card rounded-lg overflow-hidden border border-border hover:border-primary hover:shadow-md transition-all duration-200"
               >
-                {/* Thumbnail */}
-                <div className="aspect-video bg-muted">
-                  {project.thumbnailUrl || project.imageUrl ? (
-                    <img
-                      src={project.thumbnailUrl || project.imageUrl}
-                      alt="Thumbnail"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <svg className="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                {/* Video Preview */}
+                <div
+                  className="aspect-video bg-muted cursor-pointer relative"
+                  onClick={() => onOpenModal(project)}
+                >
+                  <video
+                    src={project.videoUrl}
+                    className="w-full h-full object-cover"
+                    muted
+                    loop
+                    onMouseEnter={(e) => e.currentTarget.play()}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.pause();
+                      e.currentTarget.currentTime = 0;
+                    }}
+                  />
+
+                  {/* Play icon overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-12 h-12 bg-primary/90 rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-primary-foreground ml-1" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
                       </svg>
                     </div>
-                  )}
+                  </div>
                 </div>
 
-                {/* Info overlay */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/95 to-transparent p-2 border-t border-border/50">
-                  <div className="flex items-center space-x-1.5">
-                    {project.userPhoto && (
-                      <img
-                        src={project.userPhoto}
-                        alt={project.userName}
-                        className="w-5 h-5 rounded-full border border-border"
-                      />
-                    )}
+                {/* Info */}
+                <div className="p-3">
+                  <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-foreground truncate font-medium">
-                        {project.userName || 'Usuario'}
-                      </p>
+                      {project.description && (
+                        <p className="text-sm font-medium text-foreground line-clamp-1 mb-1">
+                          {project.description}
+                        </p>
+                      )}
                       <p className="text-xs text-muted-foreground truncate">
                         {project.createdAt?.toDate().toLocaleDateString('es-ES', {
                           day: 'numeric',
-                          month: 'short'
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit'
                         })}
                       </p>
                     </div>
-                  </div>
-                </div>
 
-                {/* Tags */}
-                {project.tags && project.tags.length > 0 && (
-                  <div className="absolute top-2 left-2">
-                    <span className="text-xs px-1.5 py-0.5 bg-primary text-primary-foreground rounded shadow-sm">
-                      {project.tags[0]}
-                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectProject(project);
+                      }}
+                      className="ml-2 p-1.5 hover:bg-muted rounded transition-colors"
+                      title="Cargar proyecto"
+                    >
+                      <svg className="w-4 h-4 text-muted-foreground hover:text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      </svg>
+                    </button>
                   </div>
-                )}
-              </button>
+
+                  {/* Tags */}
+                  {project.tags && project.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {project.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="text-xs px-1.5 py-0.5 bg-primary/10 text-primary rounded"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         )}

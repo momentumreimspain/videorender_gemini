@@ -33,6 +33,7 @@ import { VideoConfigPreview } from "./components/VideoConfigPreview";
 import { CameraPresets } from "./components/CameraPresets";
 import { useToast } from "./components/Toast";
 import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
+import { VideoModal } from "./components/VideoModal";
 import type { VeoResponse, VideoResolution, MusicTrack, CameraMovement, MovementSpeed, Duration } from "./types";
 
 declare global {
@@ -86,6 +87,10 @@ const App: React.FC = () => {
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Video modal
+  const [modalProject, setModalProject] = useState<VideoProject | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Auth listener
   useEffect(() => {
@@ -238,6 +243,48 @@ const App: React.FC = () => {
       if (result.videoUrl) {
         setVideoUrl(result.videoUrl);
         showToast('Video generado exitosamente', 'success');
+
+        // Auto-save project if user is logged in
+        if (user && imageFile) {
+          setTimeout(async () => {
+            try {
+              const imagePath = `users/${user.uid}/images/${Date.now()}_${imageFile.name}`;
+              const imageUrl = await uploadFile(imageFile, imagePath);
+
+              const videoBlob = await fetch(result.videoUrl!).then(r => r.blob());
+              const videoPath = `users/${user.uid}/videos/${Date.now()}.mp4`;
+              const videoStorageUrl = await uploadFile(videoBlob, videoPath);
+
+              const project: Omit<VideoProject, 'id'> = {
+                userId: user.uid,
+                userEmail: user.email || '',
+                userName: user.displayName || undefined,
+                userPhoto: user.photoURL || undefined,
+                imageUrl,
+                videoUrl: videoStorageUrl,
+                prompt,
+                resolution,
+                musicTrack: selectedMusic.name,
+                tags: [],
+                description: '',
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+                cameraMovement,
+                movementSpeed,
+                duration,
+                intensity,
+              };
+
+              const projectId = await saveVideoProject(project);
+              setCurrentProjectId(projectId);
+              await loadProjects();
+              showToast('Proyecto guardado automáticamente', 'success');
+            } catch (error) {
+              console.error('Error auto-saving project:', error);
+              showToast('El video se generó, pero hubo un error al guardarlo', 'warning');
+            }
+          }, 1000);
+        }
       } else if (result.error) {
         setError(result.error);
         showToast(result.error, 'error');
@@ -292,7 +339,8 @@ const App: React.FC = () => {
         // Update existing project
         await updateVideoProject(currentProjectId, {
           description,
-          tags
+          tags,
+          updatedAt: Timestamp.now()
         });
       } else {
         // Create new project
@@ -349,6 +397,22 @@ const App: React.FC = () => {
     setDescription(project.description || '');
     setTags(project.tags || []);
     setCurrentProjectId(project.id || null);
+
+    // Load camera config if available
+    if (project.cameraMovement) setCameraMovement(project.cameraMovement as CameraMovement);
+    if (project.movementSpeed) setMovementSpeed(project.movementSpeed as MovementSpeed);
+    if (project.duration) setDuration(project.duration as Duration);
+    if (project.intensity) setIntensity(project.intensity);
+  };
+
+  const handleOpenModal = (project: VideoProject) => {
+    setModalProject(project);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setTimeout(() => setModalProject(null), 300);
   };
 
   const handleDownload = () => {
@@ -378,7 +442,14 @@ const App: React.FC = () => {
         onClose={() => setShowGallery(false)}
         onToggle={() => setShowGallery(!showGallery)}
         onSelectProject={handleSelectProject}
+        onOpenModal={handleOpenModal}
         isLoading={isLoadingProjects}
+      />
+
+      <VideoModal
+        project={modalProject}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
       />
 
       <main className={`transition-all duration-300 ${showGallery ? 'mr-80' : 'mr-0'}`}>
