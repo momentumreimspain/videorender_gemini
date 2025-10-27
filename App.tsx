@@ -1,16 +1,19 @@
 import React, { useState, useCallback, useEffect } from "react";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { Timestamp } from "firebase/firestore";
 import { generateVideoFromImage } from "./services/geminiService";
 import {
-  logOut,
-  onAuthChange,
+  logOut as supabaseLogOut,
+  onAuthChange as supabaseOnAuthChange,
+} from "./services/supabaseService";
+import {
   saveVideoProject,
   getAllProjects,
   deleteVideoProject,
+  uploadFile,
   updateVideoProject,
-  type VideoProject
-} from "./services/supabaseService";
-import { uploadFile } from "./services/firebaseService";
+  VideoProject
+} from "./services/firebaseService";
 import { useTheme } from "./hooks/useTheme";
 import { Header } from "./components/Header";
 import { ImageUpload } from "./components/ImageUpload";
@@ -82,6 +85,7 @@ const App: React.FC = () => {
   // Gallery & Context
   const [projects, setProjects] = useState<VideoProject[]>([]);
   const [showGallery, setShowGallery] = useState(true);
+  const [showOnlyMyProjects, setShowOnlyMyProjects] = useState(false);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [description, setDescription] = useState("");
@@ -92,9 +96,9 @@ const App: React.FC = () => {
   const [modalProject, setModalProject] = useState<VideoProject | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Auth listener
+  // Auth listener (Supabase)
   useEffect(() => {
-    const unsubscribe = onAuthChange((currentUser) => {
+    const unsubscribe = supabaseOnAuthChange((currentUser) => {
       setUser(currentUser);
       if (currentUser) {
         loadProjects();
@@ -164,7 +168,7 @@ const App: React.FC = () => {
 
   const handleSignOut = async () => {
     try {
-      await logOut();
+      await supabaseLogOut();
       setVideoUrl(null);
       setImageFile(null);
       setPrompt("");
@@ -243,38 +247,57 @@ const App: React.FC = () => {
         if (user && imageFile) {
           setTimeout(async () => {
             try {
+              console.log('Starting auto-save with user:', user.id);
+
               const imagePath = `users/${user.id}/images/${Date.now()}_${imageFile.name}`;
+              console.log('Uploading image to:', imagePath);
               const imageUrl = await uploadFile(imageFile, imagePath);
+              console.log('Image uploaded:', imageUrl);
 
+              console.log('Fetching video blob...');
               const videoBlob = await fetch(result.videoUrl!).then(r => r.blob());
-              const videoPath = `users/${user.id}/videos/${Date.now()}.mp4`;
-              const videoStorageUrl = await uploadFile(videoBlob, videoPath);
+              console.log('Video blob size:', videoBlob.size);
 
-              const project: Omit<VideoProject, 'id' | 'created_at' | 'updated_at'> = {
-                user_id: user.id,
-                user_email: user.email || '',
-                user_name: user.user_metadata?.name || user.email?.split('@')[0] || undefined,
-                user_photo: user.user_metadata?.avatar_url || undefined,
-                image_url: imageUrl,
-                video_url: videoStorageUrl,
+              const videoPath = `users/${user.id}/videos/${Date.now()}.mp4`;
+              console.log('Uploading video to:', videoPath);
+              const videoStorageUrl = await uploadFile(videoBlob, videoPath);
+              console.log('Video uploaded:', videoStorageUrl);
+
+              const project: Omit<VideoProject, 'id'> = {
+                userId: user.id,
+                userEmail: user.email || 'unknown@momentumbrain.com',
+                userName: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
+                ...(user.user_metadata?.avatar_url && { userPhoto: user.user_metadata.avatar_url }),
+                imageUrl,
+                videoUrl: videoStorageUrl,
                 prompt,
                 resolution,
-                music_track: selectedMusic.name,
+                musicTrack: selectedMusic.name,
                 tags: [],
                 description: '',
-                camera_movement: cameraMovement,
-                movement_speed: movementSpeed,
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+                cameraMovement,
+                movementSpeed,
                 duration,
                 intensity,
               };
 
+              console.log('Saving project to Firestore:', project);
               const projectId = await saveVideoProject(project);
+              console.log('Project saved with ID:', projectId);
+
               setCurrentProjectId(projectId);
               await loadProjects();
               showToast('Proyecto guardado automáticamente', 'success');
-            } catch (error) {
+            } catch (error: any) {
               console.error('Error auto-saving project:', error);
-              showToast('El video se generó, pero hubo un error al guardarlo', 'warning');
+              console.error('Error details:', {
+                message: error.message,
+                code: error.code,
+                stack: error.stack
+              });
+              showToast(`Error al guardar: ${error.message || 'Error desconocido'}`, 'error');
             }
           }, 1000);
         }
@@ -332,7 +355,8 @@ const App: React.FC = () => {
         // Update existing project
         await updateVideoProject(currentProjectId, {
           description,
-          tags
+          tags,
+          updatedAt: Timestamp.now()
         });
       } else {
         // Create new project
@@ -343,20 +367,21 @@ const App: React.FC = () => {
         const videoPath = `users/${user.id}/videos/${Date.now()}.mp4`;
         const videoStorageUrl = await uploadFile(videoBlob, videoPath);
 
-        const project: Omit<VideoProject, 'id' | 'created_at' | 'updated_at'> = {
-          user_id: user.id,
-          user_email: user.email || '',
-          user_name: user.user_metadata?.name || user.email?.split('@')[0] || undefined,
-          user_photo: user.user_metadata?.avatar_url || undefined,
-          image_url: imageUrl,
-          video_url: videoStorageUrl,
+        const project: Omit<VideoProject, 'id'> = {
+          userId: user.id,
+          userEmail: user.email || '',
+          userName: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
+          ...(user.user_metadata?.avatar_url && { userPhoto: user.user_metadata.avatar_url }),
+          imageUrl,
+          videoUrl: videoStorageUrl,
           prompt,
           resolution,
-          music_track: selectedMusic.name,
+          musicTrack: selectedMusic.name,
           tags,
           description,
-          camera_movement: cameraMovement,
-          movement_speed: movementSpeed,
+          createdAt: Timestamp.now(),
+          cameraMovement: cameraMovement,
+          movementSpeed: movementSpeed,
           duration: duration,
           intensity: intensity,
         };
@@ -379,18 +404,18 @@ const App: React.FC = () => {
   };
 
   const handleSelectProject = (project: VideoProject) => {
-    setVideoUrl(project.video_url);
+    setVideoUrl(project.videoUrl);
     setPrompt(project.prompt);
     setResolution(project.resolution as VideoResolution);
-    const music = musicTracks.find(m => m.name === project.music_track) || musicTracks[0];
+    const music = musicTracks.find(m => m.name === project.musicTrack) || musicTracks[0];
     setSelectedMusic(music);
     setDescription(project.description || '');
     setTags(project.tags || []);
     setCurrentProjectId(project.id || null);
 
     // Load camera config if available
-    if (project.camera_movement) setCameraMovement(project.camera_movement as CameraMovement);
-    if (project.movement_speed) setMovementSpeed(project.movement_speed as MovementSpeed);
+    if (project.cameraMovement) setCameraMovement(project.cameraMovement as CameraMovement);
+    if (project.movementSpeed) setMovementSpeed(project.movementSpeed as MovementSpeed);
     if (project.duration) setDuration(project.duration as Duration);
     if (project.intensity) setIntensity(project.intensity);
   };
@@ -428,6 +453,9 @@ const App: React.FC = () => {
 
       <GallerySidebar
         projects={projects}
+        currentUserId={user?.id || null}
+        showOnlyMyProjects={showOnlyMyProjects}
+        onToggleFilter={() => setShowOnlyMyProjects(!showOnlyMyProjects)}
         isOpen={showGallery}
         onClose={() => setShowGallery(false)}
         onToggle={() => setShowGallery(!showGallery)}

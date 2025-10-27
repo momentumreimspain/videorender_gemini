@@ -46,10 +46,25 @@ export const generateVideoFromImage = async (
 
     const finalOperation = await pollOperation(operation, ai);
 
+    // Log the full response for debugging
+    console.log('Final operation response:', JSON.stringify(finalOperation, null, 2));
+
     const downloadLink = finalOperation.response?.generatedVideos?.[0]?.video?.uri;
     if (!downloadLink) {
       console.error('No download link found in operation response:', finalOperation);
-      return { error: 'Video generation completed, but no video URL was returned.' };
+
+      // Check for specific error reasons
+      const errorMessage = finalOperation.response?.error?.message ||
+                          finalOperation.error?.message ||
+                          'Video generation completed, but no video URL was returned.';
+
+      const safetyIssue = finalOperation.response?.generatedVideos?.[0]?.finishReason;
+
+      if (safetyIssue && safetyIssue !== 'SUCCESS') {
+        return { error: `Video generation blocked: ${safetyIssue}. Try a different prompt or image.` };
+      }
+
+      return { error: errorMessage };
     }
     
     // The response.body contains the MP4 bytes. You must append an API key when fetching from the download link.
