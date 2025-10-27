@@ -1,18 +1,16 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { User } from "firebase/auth";
-import { Timestamp } from "firebase/firestore";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { generateVideoFromImage } from "./services/geminiService";
 import {
-  signInWithGoogle,
   logOut,
   onAuthChange,
   saveVideoProject,
   getAllProjects,
   deleteVideoProject,
-  uploadFile,
   updateVideoProject,
-  VideoProject
-} from "./services/firebaseService";
+  type VideoProject
+} from "./services/supabaseService";
+import { uploadFile } from "./services/firebaseService";
 import { useTheme } from "./hooks/useTheme";
 import { Header } from "./components/Header";
 import { ImageUpload } from "./components/ImageUpload";
@@ -34,6 +32,7 @@ import { CameraPresets } from "./components/CameraPresets";
 import { useToast } from "./components/Toast";
 import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
 import { VideoModal } from "./components/VideoModal";
+import { LoginModal } from "./components/LoginModal";
 import type { VeoResponse, VideoResolution, MusicTrack, CameraMovement, MovementSpeed, Duration } from "./types";
 
 declare global {
@@ -61,7 +60,8 @@ const App: React.FC = () => {
   const { showToast, ToastContainer } = useToast();
 
   // Auth
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Core state
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -158,13 +158,8 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      console.error("Error signing in:", error);
-      setError("Error al iniciar sesión");
-    }
+  const handleSignIn = () => {
+    setShowLoginModal(true);
   };
 
   const handleSignOut = async () => {
@@ -248,29 +243,27 @@ const App: React.FC = () => {
         if (user && imageFile) {
           setTimeout(async () => {
             try {
-              const imagePath = `users/${user.uid}/images/${Date.now()}_${imageFile.name}`;
+              const imagePath = `users/${user.id}/images/${Date.now()}_${imageFile.name}`;
               const imageUrl = await uploadFile(imageFile, imagePath);
 
               const videoBlob = await fetch(result.videoUrl!).then(r => r.blob());
-              const videoPath = `users/${user.uid}/videos/${Date.now()}.mp4`;
+              const videoPath = `users/${user.id}/videos/${Date.now()}.mp4`;
               const videoStorageUrl = await uploadFile(videoBlob, videoPath);
 
-              const project: Omit<VideoProject, 'id'> = {
-                userId: user.uid,
-                userEmail: user.email || '',
-                userName: user.displayName || undefined,
-                userPhoto: user.photoURL || undefined,
-                imageUrl,
-                videoUrl: videoStorageUrl,
+              const project: Omit<VideoProject, 'id' | 'created_at' | 'updated_at'> = {
+                user_id: user.id,
+                user_email: user.email || '',
+                user_name: user.user_metadata?.name || user.email?.split('@')[0] || undefined,
+                user_photo: user.user_metadata?.avatar_url || undefined,
+                image_url: imageUrl,
+                video_url: videoStorageUrl,
                 prompt,
                 resolution,
-                musicTrack: selectedMusic.name,
+                music_track: selectedMusic.name,
                 tags: [],
                 description: '',
-                createdAt: Timestamp.now(),
-                updatedAt: Timestamp.now(),
-                cameraMovement,
-                movementSpeed,
+                camera_movement: cameraMovement,
+                movement_speed: movementSpeed,
                 duration,
                 intensity,
               };
@@ -339,34 +332,31 @@ const App: React.FC = () => {
         // Update existing project
         await updateVideoProject(currentProjectId, {
           description,
-          tags,
-          updatedAt: Timestamp.now()
+          tags
         });
       } else {
         // Create new project
-        const imagePath = `users/${user.uid}/images/${Date.now()}_${imageFile?.name || 'image.jpg'}`;
+        const imagePath = `users/${user.id}/images/${Date.now()}_${imageFile?.name || 'image.jpg'}`;
         const imageUrl = imageFile ? await uploadFile(imageFile, imagePath) : '';
 
         const videoBlob = await fetch(videoUrl).then(r => r.blob());
-        const videoPath = `users/${user.uid}/videos/${Date.now()}.mp4`;
+        const videoPath = `users/${user.id}/videos/${Date.now()}.mp4`;
         const videoStorageUrl = await uploadFile(videoBlob, videoPath);
 
-        const project: Omit<VideoProject, 'id'> = {
-          userId: user.uid,
-          userEmail: user.email || '',
-          userName: user.displayName || undefined,
-          userPhoto: user.photoURL || undefined,
-          imageUrl,
-          videoUrl: videoStorageUrl,
+        const project: Omit<VideoProject, 'id' | 'created_at' | 'updated_at'> = {
+          user_id: user.id,
+          user_email: user.email || '',
+          user_name: user.user_metadata?.name || user.email?.split('@')[0] || undefined,
+          user_photo: user.user_metadata?.avatar_url || undefined,
+          image_url: imageUrl,
+          video_url: videoStorageUrl,
           prompt,
           resolution,
-          musicTrack: selectedMusic.name,
+          music_track: selectedMusic.name,
           tags,
           description,
-          createdAt: Timestamp.now(),
-          // Add camera config (these might not be in VideoProject type yet, but we'll add them)
-          cameraMovement: cameraMovement,
-          movementSpeed: movementSpeed,
+          camera_movement: cameraMovement,
+          movement_speed: movementSpeed,
           duration: duration,
           intensity: intensity,
         };
@@ -389,18 +379,18 @@ const App: React.FC = () => {
   };
 
   const handleSelectProject = (project: VideoProject) => {
-    setVideoUrl(project.videoUrl);
+    setVideoUrl(project.video_url);
     setPrompt(project.prompt);
     setResolution(project.resolution as VideoResolution);
-    const music = musicTracks.find(m => m.name === project.musicTrack) || musicTracks[0];
+    const music = musicTracks.find(m => m.name === project.music_track) || musicTracks[0];
     setSelectedMusic(music);
     setDescription(project.description || '');
     setTags(project.tags || []);
     setCurrentProjectId(project.id || null);
 
     // Load camera config if available
-    if (project.cameraMovement) setCameraMovement(project.cameraMovement as CameraMovement);
-    if (project.movementSpeed) setMovementSpeed(project.movementSpeed as MovementSpeed);
+    if (project.camera_movement) setCameraMovement(project.camera_movement as CameraMovement);
+    if (project.movement_speed) setMovementSpeed(project.movement_speed as MovementSpeed);
     if (project.duration) setDuration(project.duration as Duration);
     if (project.intensity) setIntensity(project.intensity);
   };
@@ -698,6 +688,16 @@ const App: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Login Modal */}
+      {showLoginModal && (
+        <LoginModal
+          onClose={() => setShowLoginModal(false)}
+          onSuccess={() => {
+            showToast('Sesión iniciada correctamente', 'success');
+          }}
+        />
+      )}
 
       <KeyboardShortcutsHelp />
     </div>

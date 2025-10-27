@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ThemeToggle } from "./ThemeToggle";
 import { Theme } from "../hooks/useTheme";
-import { User } from "firebase/auth";
+import type { User } from "@supabase/supabase-js";
 
 interface HeaderProps {
   theme: Theme;
@@ -17,7 +17,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeChange, user, onSi
   // Reset image error when user changes
   useEffect(() => {
     setImageError(false);
-  }, [user?.uid]);
+  }, [user?.id]);
 
   // Get initials from user name
   const getInitials = (name: string | null) => {
@@ -56,22 +56,22 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeChange, user, onSi
 
             {user ? (
               <div className="flex items-center space-x-2">
-                {user.photoURL && !imageError ? (
+                {user.user_metadata?.avatar_url && !imageError ? (
                   <img
-                    src={user.photoURL}
-                    alt={user.displayName || 'User'}
+                    src={user.user_metadata.avatar_url}
+                    alt={user.user_metadata?.name || user.email || 'User'}
                     className="w-8 h-8 rounded-full border-2 border-border object-cover"
                     onError={() => setImageError(true)}
                   />
                 ) : (
                   <div className="w-8 h-8 rounded-full border-2 border-border bg-primary/10 flex items-center justify-center">
                     <span className="text-xs font-semibold text-primary">
-                      {getInitials(user.displayName)}
+                      {getInitials(user.user_metadata?.name || user.email?.split('@')[0] || null)}
                     </span>
                   </div>
                 )}
                 <div className="hidden md:block">
-                  <p className="text-sm font-medium text-foreground">{user.displayName}</p>
+                  <p className="text-sm font-medium text-foreground">{user.user_metadata?.name || user.email?.split('@')[0]}</p>
                 </div>
                 <button
                   onClick={onSignOut}
