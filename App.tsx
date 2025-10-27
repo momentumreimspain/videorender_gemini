@@ -467,6 +467,7 @@ const App: React.FC = () => {
         user={user}
         onSignIn={handleSignIn}
         onSignOut={handleSignOut}
+        onLogoClick={handleNewVideo}
       />
 
       <GallerySidebar
