@@ -5,18 +5,33 @@ interface QuickActionsProps {
   onDownload: () => void;
   onShare?: () => void;
   onRegenerate?: () => void;
+  onNewVideo?: () => void;
 }
 
 export const QuickActions: React.FC<QuickActionsProps> = ({
   videoUrl,
   onDownload,
   onShare,
-  onRegenerate
+  onRegenerate,
+  onNewVideo
 }) => {
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-md hover:shadow-lg transition-shadow duration-200 p-4">
       <h3 className="text-sm font-semibold text-foreground mb-3">Quick Actions</h3>
       <div className="flex flex-wrap gap-2">
+        {/* Nuevo Video - Destacado */}
+        {onNewVideo && (
+          <button
+            onClick={onNewVideo}
+            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground rounded-lg transition-all text-sm font-semibold shadow-md hover:shadow-lg"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Nuevo Video</span>
+          </button>
+        )}
+
         <button
           onClick={onDownload}
           className="flex items-center space-x-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors text-sm font-medium shadow-sm"

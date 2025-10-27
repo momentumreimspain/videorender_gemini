@@ -439,6 +439,24 @@ const App: React.FC = () => {
     link.click();
   };
 
+  const handleNewVideo = () => {
+    // Reset all state to start fresh
+    setVideoUrl(null);
+    setImageFile(null);
+    setPrompt("");
+    setResolution("720p");
+    setSelectedMusic(musicTracks[0]);
+    setCameraMovement("static");
+    setMovementSpeed("medium");
+    setDuration("6s");
+    setIntensity(5);
+    setDescription("");
+    setTags([]);
+    setCurrentProjectId(null);
+    setError(null);
+    showToast('Listo para crear un nuevo video', 'success');
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900 text-foreground">
       <ToastContainer />
@@ -693,6 +711,7 @@ const App: React.FC = () => {
                   <QuickActions
                     videoUrl={videoUrl}
                     onDownload={handleDownload}
+                    onNewVideo={handleNewVideo}
                     onRegenerate={() => {
                       setVideoUrl(null);
                       setCurrentProjectId(null);

@@ -107,6 +107,20 @@ export const VideoModal: React.FC<VideoModalProps> = ({ project, isOpen, onClose
               </button>
             </div>
 
+            {/* Original Image */}
+            {project.imageUrl && (
+              <div className="mb-6">
+                <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Imagen Original</h4>
+                <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm">
+                  <img
+                    src={project.imageUrl}
+                    alt="Imagen original"
+                    className="w-full h-auto object-cover"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Description */}
             {project.description && (
               <div className="mb-6">
