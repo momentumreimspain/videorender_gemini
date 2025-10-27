@@ -48,13 +48,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onSuccess }) =>
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
-            <div>
+            <div className="flex-1">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Iniciar Sesión
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Usa tus credenciales de Momentum Brain
               </p>
+              <div className="mt-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                <p className="text-xs text-primary font-medium mb-1">💡 Formato de email:</p>
+                <p className="text-xs text-gray-700 dark:text-gray-300">
+                  <span className="font-mono bg-white dark:bg-slate-800 px-2 py-0.5 rounded">nombre.apellido@momentumreim.com</span>
+                </p>
+              </div>
             </div>
             <button
               onClick={onClose}

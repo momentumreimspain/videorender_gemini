@@ -165,13 +165,43 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : filteredProjects.length === 0 ? (
-          <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
-            </svg>
-            <p className="mt-2 text-sm text-muted-foreground">
-              No hay proyectos aún
+          <div className="flex flex-col items-center justify-center h-full text-center px-6 py-12">
+            {/* Icono decorativo */}
+            <div className="relative mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center">
+                <svg className="w-10 h-10 text-primary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary/20 rounded-full blur-sm"></div>
+            </div>
+
+            {/* Mensaje */}
+            <h3 className="text-base font-semibold text-foreground mb-2">
+              {showOnlyMyProjects ? 'No tienes videos aún' : 'No hay videos todavía'}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4 max-w-[200px]">
+              {showOnlyMyProjects
+                ? 'Crea tu primer video animado con IA'
+                : 'Sé el primero en generar un video'}
             </p>
+
+            {/* Instrucción visual */}
+            <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border/50">
+              <div className="flex items-start space-x-2 text-left">
+                <svg className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <div>
+                  <p className="text-xs font-medium text-foreground">Cómo empezar:</p>
+                  <ol className="text-xs text-muted-foreground mt-1 space-y-0.5 list-decimal list-inside">
+                    <li>Sube una imagen</li>
+                    <li>Describe el movimiento</li>
+                    <li>Genera tu video</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3">

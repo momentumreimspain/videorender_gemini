@@ -503,7 +503,11 @@ const App: React.FC = () => {
                   {/* Image Upload */}
                   <div className="space-y-1.5">
                     <Label>Imagen</Label>
-                    <ImageUpload onImageUpload={handleImageUpload} />
+                    <ImageUpload
+                      onImageUpload={handleImageUpload}
+                      isAuthenticated={!!user}
+                      onRequireAuth={() => setShowLoginModal(true)}
+                    />
                   </div>
 
                   {/* Camera Presets */}

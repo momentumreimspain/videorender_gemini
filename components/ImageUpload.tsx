@@ -3,21 +3,33 @@ import { useDropzone } from "react-dropzone";
 
 interface ImageUploadProps {
   onImageUpload: (file: File) => void;
+  isAuthenticated?: boolean;
+  onRequireAuth?: () => void;
 }
 
-export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageUpload }) => {
+export const ImageUpload: React.FC<ImageUploadProps> = ({
+  onImageUpload,
+  isAuthenticated = true,
+  onRequireAuth
+}) => {
   const [preview, setPreview] = useState<string | null>(null);
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       if (acceptedFiles && acceptedFiles.length > 0) {
+        // Check if user is authenticated
+        if (!isAuthenticated && onRequireAuth) {
+          onRequireAuth();
+          return;
+        }
+
         const file = acceptedFiles[0];
         onImageUpload(file);
         const previewUrl = URL.createObjectURL(file);
         setPreview(previewUrl);
       }
     },
-    [onImageUpload]
+    [onImageUpload, isAuthenticated, onRequireAuth]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
