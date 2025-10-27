@@ -30,7 +30,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, onThemeChange, user, onSi
   };
 
   return (
-    <header className="border-b bg-white dark:bg-slate-800 backdrop-blur supports-[backdrop-filter]:bg-card/80 sticky top-0 z-40 shadow-sm">
+    <header className="border-b bg-white dark:bg-slate-800 backdrop-blur supports-[backdrop-filter]:bg-card/80 sticky top-0 z-[60] shadow-sm">
       <div className="container mx-auto px-6 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}

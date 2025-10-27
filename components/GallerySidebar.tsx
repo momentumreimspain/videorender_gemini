@@ -54,7 +54,7 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
     return (
       <button
         onClick={onToggle}
-        className="fixed right-4 top-20 z-40 p-3 bg-primary hover:bg-primary/90 rounded-lg transition-colors shadow-lg"
+        className="fixed right-4 top-20 z-[45] p-3 bg-primary hover:bg-primary/90 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
         title="Abrir galería (⌘⇧G)"
       >
         <svg className="w-5 h-5 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -65,7 +65,15 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
   }
 
   return (
-    <div className="fixed right-0 top-0 h-full w-80 bg-white dark:bg-slate-800 border-l border-border shadow-2xl z-50 flex flex-col">
+    <>
+      {/* Backdrop/Overlay */}
+      <div
+        className="fixed inset-0 bg-black/30 backdrop-blur-xs z-40 animate-in fade-in duration-200"
+        onClick={onClose}
+      />
+
+      {/* Sidebar */}
+      <div className="fixed right-0 top-0 h-full w-80 bg-white dark:bg-slate-800 border-l border-border shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border bg-card">
         <div className="flex items-center space-x-2">
@@ -222,5 +230,6 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
         )}
       </div>
     </div>
+    </>
   );
 };

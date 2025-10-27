@@ -48,167 +48,166 @@ export const VideoModal: React.FC<VideoModalProps> = ({ project, isOpen, onClose
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 animate-fade-in"
+        className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 animate-fade-in"
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      {/* Modal - Two Column Layout */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none">
         <div
-          className="bg-card border border-border rounded-lg shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto pointer-events-auto animate-scale-in"
+          className="bg-white dark:bg-slate-800 shadow-2xl max-w-6xl w-full h-[70vh] pointer-events-auto animate-scale-in rounded-xl overflow-hidden flex"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
-            <div className="flex items-center space-x-3">
-              {project.userPhoto && (
-                <img
-                  src={project.userPhoto}
-                  alt={project.userName}
-                  className="w-8 h-8 rounded-full border-2 border-border"
-                />
-              )}
-              <div>
-                <h3 className="font-semibold text-foreground">{project.userName || 'Usuario'}</h3>
-                <p className="text-xs text-muted-foreground">
-                  {project.createdAt?.toDate().toLocaleString('es-ES', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </p>
-              </div>
-            </div>
+          {/* Close Button - Top Right */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 z-20 p-2 bg-black/20 hover:bg-black/40 dark:bg-white/20 dark:hover:bg-white/30 backdrop-blur-sm rounded-full transition-all duration-200"
+            title="Cerrar (Esc)"
+          >
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
 
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-muted rounded-lg transition-colors"
-            >
-              <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Video Player */}
-          <div className="p-6">
-            <div className="bg-muted rounded-lg overflow-hidden mb-4">
-              <VideoPlayer src={project.videoUrl} musicUrl="" />
-            </div>
-
-            {/* Project Info */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              {/* Left column */}
-              <div className="space-y-3">
-                {project.description && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Descripción</p>
-                    <p className="text-sm text-foreground">{project.description}</p>
-                  </div>
+          {/* Left Column - Info (35%) */}
+          <div className="w-[35%] bg-white dark:bg-slate-800 p-6 overflow-y-auto border-r border-gray-200 dark:border-slate-700">
+            {/* User Info */}
+            <div className="mb-6">
+              <div className="flex items-center space-x-3 mb-2">
+                {project.userPhoto && (
+                  <img
+                    src={project.userPhoto}
+                    alt={project.userName}
+                    className="w-10 h-10 rounded-full border-2 border-gray-200 dark:border-slate-700"
+                  />
                 )}
-
-                {project.prompt && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Prompt</p>
-                    <p className="text-sm text-foreground">{project.prompt}</p>
-                  </div>
-                )}
-
-                {project.tags && project.tags.length > 0 && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Tags</p>
-                    <div className="flex flex-wrap gap-2">
-                      {project.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="px-2 py-1 bg-primary/10 border border-primary text-primary rounded text-xs"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Right column - Technical details */}
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Configuración Técnica</p>
-
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  {project.cameraMovement && (
-                    <div>
-                      <span className="text-muted-foreground">Movimiento:</span>
-                      <span className="ml-1 text-foreground font-medium">
-                        {movementLabels[project.cameraMovement] || project.cameraMovement}
-                      </span>
-                    </div>
-                  )}
-
-                  {project.movementSpeed && (
-                    <div>
-                      <span className="text-muted-foreground">Velocidad:</span>
-                      <span className="ml-1 text-foreground font-medium capitalize">{project.movementSpeed}</span>
-                    </div>
-                  )}
-
-                  {project.duration && (
-                    <div>
-                      <span className="text-muted-foreground">Duración:</span>
-                      <span className="ml-1 text-foreground font-medium">{project.duration}</span>
-                    </div>
-                  )}
-
-                  {project.intensity && (
-                    <div>
-                      <span className="text-muted-foreground">Intensidad:</span>
-                      <span className="ml-1 text-foreground font-medium">{project.intensity}/10</span>
-                    </div>
-                  )}
-
-                  <div>
-                    <span className="text-muted-foreground">Resolución:</span>
-                    <span className="ml-1 text-foreground font-medium">{project.resolution}</span>
-                  </div>
-
-                  {project.musicTrack && project.musicTrack !== 'Ninguna' && (
-                    <div>
-                      <span className="text-muted-foreground">Música:</span>
-                      <span className="ml-1 text-foreground font-medium">{project.musicTrack}</span>
-                    </div>
-                  )}
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">{project.userName || 'Usuario'}</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {project.createdAt?.toDate().toLocaleDateString('es-ES', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
                 </div>
               </div>
-            </div>
 
-            {/* Actions */}
-            <div className="flex space-x-2 pt-4 border-t border-border">
+              {/* Download Button */}
               <button
                 onClick={handleDownload}
-                className="flex items-center space-x-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors text-sm font-medium shadow-sm"
+                className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors shadow-sm font-medium"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                <span>Descargar</span>
+                <span>Descargar Video</span>
               </button>
+            </div>
 
-              <button
-                onClick={() => {
-                  const link = document.createElement('a');
-                  link.href = project.videoUrl;
-                  link.target = '_blank';
-                  link.click();
-                }}
-                className="flex items-center space-x-2 px-4 py-2 border border-input bg-background hover:bg-accent rounded-lg transition-colors text-sm font-medium"
+            {/* Description */}
+            {project.description && (
+              <div className="mb-6">
+                <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Descripción</h4>
+                <p className="text-sm text-gray-900 dark:text-white leading-relaxed">
+                  {project.description}
+                </p>
+              </div>
+            )}
+
+            {/* Prompt */}
+            {project.prompt && (
+              <div className="mb-6">
+                <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Prompt</h4>
+                <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{project.prompt}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Tags */}
+            {project.tags && project.tags.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Tags</h4>
+                <div className="flex flex-wrap gap-2">
+                  {project.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-primary/10 border border-primary/20 text-primary rounded-full text-xs font-medium"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Technical Configuration */}
+            <div>
+              <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Configuración Técnica</h4>
+
+              <div className="space-y-2">
+                {project.cameraMovement && (
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-slate-700">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Movimiento</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                      {movementLabels[project.cameraMovement] || project.cameraMovement}
+                    </span>
+                  </div>
+                )}
+
+                {project.movementSpeed && (
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-slate-700">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Velocidad</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white capitalize">{project.movementSpeed}</span>
+                  </div>
+                )}
+
+                {project.duration && (
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-slate-700">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Duración</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{project.duration}</span>
+                  </div>
+                )}
+
+                {project.intensity && (
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-slate-700">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Intensidad</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{project.intensity}/10</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-slate-700">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Resolución</span>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{project.resolution}</span>
+                </div>
+
+                {project.musicTrack && project.musicTrack !== 'Ninguna' && (
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-slate-700">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Música</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white truncate ml-2" title={project.musicTrack}>
+                      {project.musicTrack}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Video (65%) */}
+          <div className="w-[65%] bg-black flex items-center justify-center p-0 relative">
+            <div className="w-full h-full">
+              <video
+                src={project.videoUrl}
+                controls
+                loop
+                autoPlay
+                className="w-full h-full object-cover"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-                <span>Abrir en nueva pestaña</span>
-              </button>
+                Tu navegador no soporta la etiqueta de video.
+              </video>
             </div>
           </div>
         </div>
