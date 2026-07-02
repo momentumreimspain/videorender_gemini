@@ -4,7 +4,43 @@
  */
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { GoogleGenAI, GenerateVideosOperation } from "@google/genai";
+import { createClient } from "@supabase/supabase-js";
 import type { Duration, SerializedVideoOperation } from "../types";
+
+/**
+ * Verifica la sesión de Supabase (JWT en Authorization: Bearer) antes de tocar
+ * la clave de Gemini o generar vídeo. Sin sesión válida → 401.
+ */
+async function verifyAuth(
+  req: VercelRequest
+): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+  const rawHeader = req.headers.authorization ?? req.headers.Authorization;
+  const header = Array.isArray(rawHeader) ? rawHeader[0] : rawHeader;
+  if (!header || !header.startsWith("Bearer ")) {
+    return { ok: false, status: 401, error: "Authentication required." };
+  }
+  const token = header.slice("Bearer ".length).trim();
+  if (!token) {
+    return { ok: false, status: 401, error: "Authentication required." };
+  }
+
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return { ok: false, status: 500, error: "Auth is not configured on the server." };
+  }
+
+  try {
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data?.user) {
+      return { ok: false, status: 401, error: "Invalid or expired session." };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, status: 401, error: "Invalid or expired session." };
+  }
+}
 
 export type GeminiVideoParams = {
   base64Image: string;
@@ -113,8 +149,22 @@ async function downloadVideoFromUri(
   apiKey: string,
   downloadLink: string
 ): Promise<{ ok: true; buffer: Buffer } | { ok: false; error: string; httpStatus?: number }> {
+  let parsed: URL;
   try {
-    const response = await fetch(`${downloadLink}&key=${apiKey}`);
+    parsed = new URL(downloadLink);
+  } catch {
+    return { ok: false, error: "Invalid video URI.", httpStatus: 400 };
+  }
+  if (
+    parsed.protocol !== "https:" ||
+    !(parsed.hostname === "generativelanguage.googleapis.com" || parsed.hostname.endsWith(".googleapis.com"))
+  ) {
+    return { ok: false, error: "Invalid video URI.", httpStatus: 400 };
+  }
+
+  try {
+    // La clave va en cabecera (no concatenada en la query) para no exfiltrarla si la URL apunta fuera.
+    const response = await fetch(parsed.toString(), { headers: { "x-goog-api-key": apiKey } });
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Failed to download video:", errorText);
@@ -221,6 +271,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Method not allowed" });
+    }
+
+    const auth = await verifyAuth(req);
+    if (!auth.ok) {
+      return res.status(auth.status).json({ error: auth.error });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;

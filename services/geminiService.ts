@@ -1,8 +1,18 @@
 import type { Duration, SerializedVideoOperation, VeoResponse, VideoResolution } from "../types";
+import { supabaseAuth } from "../lib/supabase";
 
 export type VideoBlobResult = { blob: Blob } | { error: string };
 
 const POLL_MS = 10000;
+
+async function authHeaders(): Promise<Record<string, string>> {
+  const { data } = await supabaseAuth.auth.getSession();
+  const token = data.session?.access_token;
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
 
 async function readJsonError(response: Response): Promise<string> {
   const ct = response.headers.get("content-type") || "";
@@ -56,7 +66,7 @@ export async function generateVideoBlobFromImage(
   try {
     const startRes = await fetch("/api/gemini-video", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: await authHeaders(),
       body: JSON.stringify(startBody),
     });
 
@@ -82,7 +92,7 @@ export async function generateVideoBlobFromImage(
 
       const statusRes = await fetch("/api/gemini-video", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await authHeaders(),
         body: JSON.stringify({ step: "status", operation }),
       });
 
@@ -111,7 +121,7 @@ export async function generateVideoBlobFromImage(
 
     const dlRes = await fetch("/api/gemini-video", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: await authHeaders(),
       body: JSON.stringify({ step: "download", videoUri: interpreted.videoUri }),
     });
 
